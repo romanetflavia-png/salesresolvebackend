@@ -153,8 +153,18 @@ app.get('/api/messages', async (req, res) => {
         .order('created_at', { ascending: false });
 
       if (!error && messages) {
+        // Map Supabase messages to expected format
+        const formattedMessages = messages.map(msg => ({
+          id: msg.id,
+          name: msg.name,
+          email: msg.email,
+          message: msg.content, // Map 'content' to 'message'
+          status: msg.status,
+          created_at: msg.created_at
+        }));
+        
         return res.json({
-          messages: messages,
+          messages: formattedMessages,
           status: 'OK',
           message: 'Messages fetched from Supabase successfully'
         });
@@ -214,10 +224,20 @@ app.post('/api/messages', async (req, res) => {
         // Send email notification
         await emailService.sendNewMessageNotification({ name, email, message });
         
-        console.log('📨 New message saved to Supabase:', savedMessage);
+        // Map Supabase response to expected format
+        const formattedMessage = {
+          id: savedMessage.id,
+          name: savedMessage.name,
+          email: savedMessage.email,
+          message: savedMessage.content, // Map 'content' to 'message'
+          status: savedMessage.status,
+          created_at: savedMessage.created_at
+        };
+        
+        console.log('📨 New message saved to Supabase:', formattedMessage);
         return res.status(201).json({
           message: 'Message sent successfully',
-          data: savedMessage
+          data: formattedMessage
         });
       }
     }
