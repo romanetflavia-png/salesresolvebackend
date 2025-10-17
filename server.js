@@ -11,9 +11,9 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-// Temporarily disable Supabase and email service for deployment
-// const { supabase } = require('./config/supabase');
-// const emailService = require('./services/emailService');
+// Enable Supabase and email service when environment variables are configured
+const { supabase } = require('./config/supabase');
+const emailService = require('./services/emailService');
 require('dotenv').config();
 
 const app = express();
@@ -142,16 +142,37 @@ app.get('/', (req, res) => {
   });
 });
 
-// Messages API - In-memory storage until Supabase is configured
-app.get('/api/messages', (req, res) => {
+// Messages API - Hybrid storage (Supabase + in-memory fallback)
+app.get('/api/messages', async (req, res) => {
+  try {
+    // Try Supabase first if configured
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && messages) {
+        return res.json({
+          messages: messages,
+          status: 'OK',
+          message: 'Messages fetched from Supabase successfully'
+        });
+      }
+    }
+  } catch (error) {
+    console.log('Supabase unavailable, using in-memory storage');
+  }
+
+  // Fallback to in-memory storage
   res.json({
     messages: messagesStorage,
     status: 'OK',
-    message: 'Messages fetched successfully'
+    message: 'Messages fetched from memory successfully'
   });
 });
 
-app.post('/api/messages', (req, res) => {
+app.post('/api/messages', async (req, res) => {
   const { name, email, message } = req.body;
   
   if (!name || !email || !message) {
@@ -161,7 +182,6 @@ app.post('/api/messages', (req, res) => {
     });
   }
   
-  // Store message in memory (temporary until Supabase is configured)
   const newMessage = {
     id: Date.now().toString(),
     name,
@@ -171,14 +191,42 @@ app.post('/api/messages', (req, res) => {
     created_at: new Date().toISOString()
   };
 
-  // Add to storage
-  messagesStorage.push(newMessage);
+  try {
+    // Try Supabase first if configured
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { data: savedMessage, error } = await supabase
+        .from('messages')
+        .insert({
+          name,
+          email,
+          message,
+          status: 'new'
+        })
+        .select()
+        .single();
 
-  console.log('📨 New message received and stored:', newMessage);
-  console.log('📊 Total messages:', messagesStorage.length);
+      if (!error && savedMessage) {
+        // Send email notification
+        await emailService.sendNewMessageNotification({ name, email, message });
+        
+        console.log('📨 New message saved to Supabase:', savedMessage);
+        return res.status(201).json({
+          message: 'Message sent successfully',
+          data: savedMessage
+        });
+      }
+    }
+  } catch (error) {
+    console.log('Supabase unavailable, using in-memory storage');
+  }
+
+  // Fallback to in-memory storage
+  messagesStorage.push(newMessage);
+  console.log('📨 New message stored in memory:', newMessage);
+  console.log('📊 Total messages in memory:', messagesStorage.length);
 
   res.status(201).json({
-    message: 'Message sent successfully',
+    message: 'Message sent successfully (stored in memory)',
     data: newMessage
   });
 });
