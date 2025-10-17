@@ -11,8 +11,9 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const { supabase } = require('./config/supabase');
-const emailService = require('./services/emailService');
+// Temporarily disable Supabase and email service for deployment
+// const { supabase } = require('./config/supabase');
+// const emailService = require('./services/emailService');
 require('dotenv').config();
 
 const app = express();
@@ -121,37 +122,36 @@ app.get('/', (req, res) => {
   });
 });
 
-// Messages API
-app.get('/api/messages', async (req, res) => {
-  try {
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('❌ Database error:', error);
-      return res.status(500).json({
-        error: 'Failed to fetch messages',
-        code: 'DATABASE_ERROR'
-      });
+// Messages API - Temporary mock data until Supabase is configured
+app.get('/api/messages', (req, res) => {
+  // Mock messages for now
+  const mockMessages = [
+    {
+      id: '1',
+      name: 'Test User 1',
+      email: 'test1@example.com',
+      message: 'Test message 1',
+      status: 'new',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '2', 
+      name: 'Test User 2',
+      email: 'test2@example.com',
+      message: 'Test message 2',
+      status: 'new',
+      created_at: new Date().toISOString()
     }
+  ];
 
-    res.json({
-      messages: messages || [],
-      status: 'OK',
-      message: 'Messages fetched successfully'
-    });
-  } catch (error) {
-    console.error('❌ Messages fetch error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
-  }
+  res.json({
+    messages: mockMessages,
+    status: 'OK',
+    message: 'Messages fetched successfully (mock data)'
+  });
 });
 
-app.post('/api/messages', async (req, res) => {
+app.post('/api/messages', (req, res) => {
   const { name, email, message } = req.body;
   
   if (!name || !email || !message) {
@@ -161,41 +161,22 @@ app.post('/api/messages', async (req, res) => {
     });
   }
   
-  try {
-    // Store message in Supabase
-    const { data: newMessage, error } = await supabase
-      .from('messages')
-      .insert({
-        name,
-        email,
-        message,
-        status: 'new'
-      })
-      .select()
-      .single();
+  // Mock message storage - will be replaced with Supabase later
+  const newMessage = {
+    id: Date.now().toString(),
+    name,
+    email,
+    message,
+    status: 'new',
+    created_at: new Date().toISOString()
+  };
 
-    if (error) {
-      console.error('❌ Database error:', error);
-      return res.status(500).json({
-        error: 'Failed to save message',
-        code: 'DATABASE_ERROR'
-      });
-    }
+  console.log('📨 New message received:', newMessage);
 
-    // Send email notification to admin
-    await emailService.sendNewMessageNotification({ name, email, message });
-
-    res.status(201).json({
-      message: 'Message sent successfully',
-      data: newMessage
-    });
-  } catch (error) {
-    console.error('❌ Message processing error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
-  }
+  res.status(201).json({
+    message: 'Message sent successfully (mock storage)',
+    data: newMessage
+  });
 });
 
 // Auth API
