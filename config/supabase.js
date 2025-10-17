@@ -11,7 +11,7 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-// Temporarily disable Supabase until environment variables are configured
+// Check if Supabase is configured
 if (!supabaseUrl || !supabaseServiceKey) {
   console.log('⚠️  Supabase not configured. Using mock data for now.');
   console.log('📝 To enable Supabase, configure: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
@@ -31,6 +31,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
     supabaseAnonKey: null
   };
 } else {
+  console.log('✅ Supabase configured successfully');
+  console.log('🔗 Supabase URL:', supabaseUrl);
+  
   // Create Supabase client with service role key (for server-side operations)
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
