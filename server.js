@@ -200,7 +200,7 @@ app.post('/api/messages', async (req, res) => {
         .insert({
           name,
           email,
-          message,
+          content: message,  // Folosește 'content' în loc de 'message'
           status: 'new'
         })
         .select()
