@@ -19,7 +19,12 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'https://salesresolvefrontend-6bgv.vercel.app',
+      'https://salesresolvefrontend.vercel.app',
+      'http://localhost:3000'
+    ],
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -58,7 +63,12 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://salesresolvefrontend-6bgv.vercel.app',
+    'https://salesresolvefrontend.vercel.app',
+    'http://localhost:3000'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
