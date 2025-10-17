@@ -3,11 +3,12 @@
  * Handles email notifications using Resend
  */
 
-const { Resend } = require('resend');
-const { supabase } = require('../config/supabase');
+// const { Resend } = require('resend');
+// const { supabase } = require('../config/supabase');
 require('dotenv').config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Temporarily disable email service until configured
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 class EmailService {
   constructor() {
@@ -20,32 +21,14 @@ class EmailService {
    */
   async sendEmail(to, subject, html, text = null) {
     try {
-      if (!process.env.RESEND_API_KEY) {
-        console.log('📧 Email service not configured. Skipping email send.');
-        return { success: false, error: 'Email service not configured' };
-      }
+      console.log('📧 Email service not configured. Skipping email send.');
+      console.log('📝 To enable emails, configure: RESEND_API_KEY');
+      return { success: false, error: 'Email service not configured' };
 
-      const emailData = {
-        from: this.fromEmail,
-        to: [to],
-        subject,
-        html,
-        ...(text && { text })
-      };
-
-      const result = await resend.emails.send(emailData);
-      
-      // Log email to database
-      await this.logEmail(to, subject, html, 'sent');
-      
-      console.log('📧 Email sent successfully:', result);
-      return { success: true, data: result };
+      // Email functionality disabled until configured
+      return { success: false, error: 'Email service not configured' };
     } catch (error) {
       console.error('❌ Email send failed:', error);
-      
-      // Log failed email to database
-      await this.logEmail(to, subject, html, 'failed');
-      
       return { success: false, error: error.message };
     }
   }
