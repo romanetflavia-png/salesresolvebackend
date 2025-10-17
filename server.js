@@ -194,6 +194,7 @@ app.post('/api/messages', async (req, res) => {
   try {
     // Try Supabase first if configured
     if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.log('🔍 Attempting to save message to Supabase...');
       const { data: savedMessage, error } = await supabase
         .from('messages')
         .insert({
@@ -204,6 +205,10 @@ app.post('/api/messages', async (req, res) => {
         })
         .select()
         .single();
+
+      if (error) {
+        console.log('❌ Supabase error:', error);
+      }
 
       if (!error && savedMessage) {
         // Send email notification
@@ -217,6 +222,7 @@ app.post('/api/messages', async (req, res) => {
       }
     }
   } catch (error) {
+    console.log('❌ Supabase exception:', error.message);
     console.log('Supabase unavailable, using in-memory storage');
   }
 
