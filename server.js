@@ -332,6 +332,12 @@ server.listen(PORT, () => {
   console.log(`💾 Database: Supabase`);
   console.log(`🔒 Security: Enabled`);
   console.log(`📊 Logging: Enabled`);
+  console.log(`🌐 CORS Origins: ${JSON.stringify([
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://salesresolvefrontend-6bgv.vercel.app',
+    'https://salesresolvefrontend.vercel.app',
+    'http://localhost:3000'
+  ])}`);
 });
 
 module.exports = { app, server, io };
