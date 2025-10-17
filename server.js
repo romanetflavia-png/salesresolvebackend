@@ -34,6 +34,26 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 4000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// In-memory storage for messages (temporary until Supabase is configured)
+let messagesStorage = [
+  {
+    id: '1',
+    name: 'Test User 1',
+    email: 'test1@example.com',
+    message: 'Test message 1',
+    status: 'new',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: '2', 
+    name: 'Test User 2',
+    email: 'test2@example.com',
+    message: 'Test message 2',
+    status: 'new',
+    created_at: new Date().toISOString()
+  }
+];
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -122,32 +142,12 @@ app.get('/', (req, res) => {
   });
 });
 
-// Messages API - Temporary mock data until Supabase is configured
+// Messages API - In-memory storage until Supabase is configured
 app.get('/api/messages', (req, res) => {
-  // Mock messages for now
-  const mockMessages = [
-    {
-      id: '1',
-      name: 'Test User 1',
-      email: 'test1@example.com',
-      message: 'Test message 1',
-      status: 'new',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: '2', 
-      name: 'Test User 2',
-      email: 'test2@example.com',
-      message: 'Test message 2',
-      status: 'new',
-      created_at: new Date().toISOString()
-    }
-  ];
-
   res.json({
-    messages: mockMessages,
+    messages: messagesStorage,
     status: 'OK',
-    message: 'Messages fetched successfully (mock data)'
+    message: 'Messages fetched successfully'
   });
 });
 
@@ -161,7 +161,7 @@ app.post('/api/messages', (req, res) => {
     });
   }
   
-  // Mock message storage - will be replaced with Supabase later
+  // Store message in memory (temporary until Supabase is configured)
   const newMessage = {
     id: Date.now().toString(),
     name,
@@ -171,10 +171,14 @@ app.post('/api/messages', (req, res) => {
     created_at: new Date().toISOString()
   };
 
-  console.log('📨 New message received:', newMessage);
+  // Add to storage
+  messagesStorage.push(newMessage);
+
+  console.log('📨 New message received and stored:', newMessage);
+  console.log('📊 Total messages:', messagesStorage.length);
 
   res.status(201).json({
-    message: 'Message sent successfully (mock storage)',
+    message: 'Message sent successfully',
     data: newMessage
   });
 });
